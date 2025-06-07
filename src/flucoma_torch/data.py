@@ -4,7 +4,7 @@ Dataset and DataLoader for Fluid Data
 
 from pathlib import Path
 import json
-from typing import Dict
+from typing import Dict, Optional, Literal
 
 import torch
 
@@ -50,7 +50,11 @@ def convert_fluid_dataset_to_tensor(fluid_data: Dict):
     return data
 
 
-def load_regression_dataset(source_filename: str, target_filename: str):
+def load_regression_dataset(
+    source_filename: str,
+    target_filename: str,
+    scaler: Optional[Literal["standardize, normalizer, robust_scale"]] = None,
+):
     """
     Load source and target datasets from JSON files and return a dataset
     TODO: Figure out validation split
@@ -76,3 +80,5 @@ def load_regression_dataset(source_filename: str, target_filename: str):
         raise ValueError(
             "Source and target datasets must have the same number of samples."
         )
+
+    # Apply scaler if needed
