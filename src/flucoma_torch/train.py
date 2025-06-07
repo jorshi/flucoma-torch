@@ -21,6 +21,9 @@ def main(cfg: Config) -> None:
 
     print("Model instantiated:", mlp)
 
+    scaler = instantiate(cfg.scaler) if cfg.scaler else None
+    print("Scaler instantiated:", scaler)
+
     # task = instantiate(cfg.module)
 
     # data = instantiate(cfg.datamodule)

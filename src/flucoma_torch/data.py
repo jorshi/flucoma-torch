@@ -82,3 +82,22 @@ def load_regression_dataset(
         )
 
     # Apply scaler if needed
+
+
+def apply_scaler(
+    data: torch.Tensor, scaler: Literal["standardize", "normalizer", "robust_scale"]
+):
+    if scaler == "standardize":
+        mean = data.mean(dim=0)
+        std = data.std(dim=0)
+        return (data - mean) / std
+    elif scaler == "normalizer":
+        norm = data.norm(dim=1, keepdim=True)
+        return data / norm
+    elif scaler == "robust_scale":
+        median = data.median(dim=0).values
+        q75, q25 = torch.quantile(data, 0.75, dim=0), torch.quantile(data, 0.25, dim=0)
+        iqr = q75 - q25
+        return (data - median) / iqr
+    else:
+        return data
