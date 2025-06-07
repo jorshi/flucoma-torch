@@ -12,3 +12,10 @@ flucoma-torch = "flucoma_torch:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.0",
+    "ruff>=0.11.13",
+]
