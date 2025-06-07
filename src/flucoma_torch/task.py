@@ -10,7 +10,7 @@ import torch
 from flucoma_torch.model import FluidMLP
 
 
-class FluidMLPRegressor(L.LightngModule):
+class FluidMLPRegressor(L.LightningModule):
     """
     A PyTorch Lightning module for training and evaluation of a FluCoMa MLP
     """
@@ -23,7 +23,7 @@ class FluidMLPRegressor(L.LightngModule):
         activation: int,
         output_activation: int,
         learn_rate: float = 1e-3,
-        max_iters: int = 1000,
+        max_iter: int = 1000,
         validation: float = 0.2,
         batch_size: int = 32,
         momentum: float = 0.9,
@@ -37,7 +37,7 @@ class FluidMLPRegressor(L.LightngModule):
             output_activation=output_activation,
         )
         self.learn_rate = learn_rate
-        self.max_iters = max_iters
+        self.max_iter = max_iter
         self.validation = validation
         self.batch_size = batch_size
         self.momentum = momentum
