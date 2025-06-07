@@ -4,9 +4,11 @@ Dataset and DataLoader for Fluid Data
 
 from pathlib import Path
 import json
-from typing import Dict, Optional, Literal
+from typing import Dict, Optional
 
 import torch
+
+from flucoma_torch.scaler import FluidBaseScaler
 
 
 class FluidDataset(torch.utils.data.Dataset):
@@ -14,21 +16,27 @@ class FluidDataset(torch.utils.data.Dataset):
     A PyTorch Dataset for Fluid data.
     """
 
-    def __init__(self, data: torch.Tensor, targets: torch.Tensor):
+    def __init__(self, source: torch.Tensor, target: torch.Tensor):
         """
         Initialize the dataset with data and targets.
 
         :param data: Input data as a tensor.
         :param targets: Target values as a tensor.
         """
-        self.data = data
-        self.targets = targets
+        assert source.ndim == 2, "Source data should be a 2D tensor."
+        assert target.ndim == 2, "Target data should be a 2D tensor."
+        assert (
+            source.shape[0] == target.shape[0]
+        ), "Source and target must have the same number of samples."
+
+        self.source = source
+        self.target = target
 
     def __len__(self):
-        return len(self.data)
+        return len(self.source)
 
     def __getitem__(self, idx):
-        return self.data[idx], self.targets[idx]
+        return self.source[idx], self.target[idx]
 
 
 def convert_fluid_dataset_to_tensor(fluid_data: Dict):
@@ -53,7 +61,7 @@ def convert_fluid_dataset_to_tensor(fluid_data: Dict):
 def load_regression_dataset(
     source_filename: str,
     target_filename: str,
-    scaler: Optional[Literal["standardize, normalizer, robust_scale"]] = None,
+    scaler: Optional[FluidBaseScaler] = None,
 ):
     """
     Load source and target datasets from JSON files and return a dataset
@@ -82,22 +90,16 @@ def load_regression_dataset(
         )
 
     # Apply scaler if needed
+    source_scaler_dict = None
+    target_scaler_dict = None
+    if scaler is not None:
+        scaler.fit(source_data)
+        source_data = scaler.transform(source_data)
+        source_scaler_dict = scaler.get_as_dict()
 
+        scaler.fit(target_data)
+        target_data = scaler.transform(target_data)
+        target_scaler_dict = scaler.get_as_dict()
 
-def apply_scaler(
-    data: torch.Tensor, scaler: Literal["standardize", "normalizer", "robust_scale"]
-):
-    if scaler == "standardize":
-        mean = data.mean(dim=0)
-        std = data.std(dim=0)
-        return (data - mean) / std
-    elif scaler == "normalizer":
-        norm = data.norm(dim=1, keepdim=True)
-        return data / norm
-    elif scaler == "robust_scale":
-        median = data.median(dim=0).values
-        q75, q25 = torch.quantile(data, 0.75, dim=0), torch.quantile(data, 0.25, dim=0)
-        iqr = q75 - q25
-        return (data - median) / iqr
-    else:
-        return data
+    dataset = FluidDataset(source_data, target_data)
+    return dataset, source_scaler_dict, target_scaler_dict

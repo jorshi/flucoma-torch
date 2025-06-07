@@ -43,7 +43,7 @@ class FluidMLPRegressor(L.LightningModule):
         self.momentum = momentum
         self.loss_function = torch.nn.MSELoss()
 
-    def train_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx):
         """
         Perform a single training step.
         """

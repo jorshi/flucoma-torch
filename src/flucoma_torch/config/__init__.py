@@ -18,6 +18,9 @@ class Config:
     mlp: MLPConfig = MISSING
     scaler: Optional[ScalerConfig] = None
 
+    source: str = MISSING
+    target: str = MISSING
+
     hydra: HydraConf = field(
         default_factory=lambda: HydraConf(
             run=RunDir(

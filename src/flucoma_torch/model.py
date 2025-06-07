@@ -2,6 +2,7 @@
 FluidMLP model
 """
 
+import json
 import math
 from typing import Dict, List
 
@@ -46,6 +47,38 @@ class FluidMLP(torch.nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+    def get_as_dict(self) -> Dict:
+        """
+        Get the model parameters as a dictionary.
+        """
+        layers = []
+        for i, layer in enumerate(self.model.modules()):
+            if isinstance(layer, torch.nn.Linear):
+                layers.append(
+                    {
+                        "biases": layer.bias.data.tolist(),
+                        "cols": layer.out_features,
+                        "rows": layer.in_features,
+                        "weights": layer.weight.data.T.tolist(),
+                    }
+                )
+
+            if type(layer) in FLUID_ACTIVATIONS.values():
+                activation = list(FLUID_ACTIVATIONS.keys())[
+                    list(FLUID_ACTIVATIONS.values()).index(type(layer))
+                ]
+                layers[-1]["activation"] = activation
+
+        return {"layers": layers}
+
+    def save(self, path: str):
+        """
+        Save the model parameters to a Fluid dictionary format.
+        """
+        fluid_dict = self.get_as_dict()
+        with open(path, "w") as f:
+            json.dump(fluid_dict, f, indent=4)
 
 
 class FluidLinear(torch.nn.Module):

@@ -18,7 +18,7 @@ class FluidNormalizeConfig(ScalerConfig):
 
 @dataclass
 class FluidStandardizeConfig(ScalerConfig):
-    _target_: str = "flucoma_torch.sclaer.FluidStandardize"
+    _target_: str = "flucoma_torch.scaler.FluidStandardize"
 
 
 @dataclass

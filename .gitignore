@@ -11,3 +11,6 @@ wheels/
 
 # Training Outputs
 outputs/
+
+# Mac OSX
+.DS_Store

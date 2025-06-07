@@ -128,19 +128,3 @@ class FluidRobustScaler(FluidBaseScaler):
             "median": self.median.tolist(),
             "range": self.range.tolist(),
         }
-
-
-class NoScaler(FluidBaseScaler):
-    """
-    No scaler for FluCoMa data.
-    This scaler does not perform any transformation.
-    """
-
-    def fit(self, data: torch.Tensor):
-        pass
-
-    def transform(self, data: torch.Tensor) -> torch.Tensor:
-        return data
-
-    def get_as_dict(self) -> Dict:
-        return {}
