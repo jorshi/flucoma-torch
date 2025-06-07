@@ -28,17 +28,19 @@ class FluidMLP(torch.nn.Module):
     def __init__(
         self,
         input_size: int,
-        hidden: List[int],
+        hidden_layers: List[int],
         output_size: int,
         activation: int,
         output_activation: int,
     ):
         super().__init__()
         layers = []
-        for i, h in enumerate(hidden):
-            layers.append(FluidLinear(input_size if i == 0 else hidden[i - 1], h))
+        for i, h in enumerate(hidden_layers):
+            layers.append(
+                FluidLinear(input_size if i == 0 else hidden_layers[i - 1], h)
+            )
             layers.append(get_activation(activation))
-        layers.append(FluidLinear(hidden[-1], output_size))
+        layers.append(FluidLinear(hidden_layers[-1], output_size))
         layers.append(get_activation(output_activation))
         self.model = torch.nn.Sequential(*layers)
 
