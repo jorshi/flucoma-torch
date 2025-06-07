@@ -1,0 +1,14 @@
+[project]
+name = "flucoma-torch"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+flucoma-torch = "flucoma_torch:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
