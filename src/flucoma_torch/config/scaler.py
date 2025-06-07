@@ -28,13 +28,7 @@ class FluidRobustScalerConfig(ScalerConfig):
     high: float = 0.75
 
 
-@dataclass
-class NoScalerConfig(ScalerConfig):
-    _target_: str = "flucoma_torch.scaler.NoScaler"
-
-
 cs = ConfigStore.instance()
 cs.store(group="scaler", name="normalize", node=FluidNormalizeConfig)
 cs.store(group="scaler", name="standardize", node=FluidStandardizeConfig)
 cs.store(group="scaler", name="robustscale", node=FluidRobustScalerConfig)
-cs.store(group="scaler", name="none", node=NoScalerConfig)
