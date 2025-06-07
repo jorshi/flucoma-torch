@@ -85,3 +85,46 @@ class FluidStandardize(FluidBaseScaler):
             "mean": self.mean.tolist(),
             "std": self.std.tolist(),
         }
+
+
+class FluidRobustScaler(FluidBaseScaler):
+    """
+    Robust scaler for FluCoMa data.
+    """
+
+    def __init__(self, low: float = 25.0, high: float = 75.0):
+        """
+        Initialize the robust scaler with high and low quantiles.
+        """
+        self.low = low
+        self.high = high
+
+    def fit(self, data: torch.Tensor):
+        assert data.ndim == 2, "Data should be a 2D tensor."
+        data, _ = torch.sort(data, dim=0)
+        self.median = data.median(dim=0).values
+
+        data_high_idx = round((self.high / 100.0) * (data.shape[0] - 1))
+        data_low_idx = round((self.low / 100.0) * (data.shape[0] - 1))
+        self.data_high = data[data_high_idx, :]
+        self.data_low = data[data_low_idx, :]
+        self.range = self.data_high - self.data_low
+        self.range[self.range < 10 * torch.finfo(self.range.dtype).smallest_normal] = (
+            1.0
+        )
+
+    def transform(self, data: torch.Tensor) -> torch.Tensor:
+        assert data.ndim == 2, "Data should be a 2D tensor."
+        robust_scaled_data = (data - self.median) / self.range
+        return robust_scaled_data
+
+    def get_as_dict(self) -> Dict:
+        return {
+            "cols": self.median.shape[0],
+            "data_high": self.data_high.tolist(),
+            "data_low": self.data_low.tolist(),
+            "high": self.high,
+            "low": self.low,
+            "median": self.median.tolist(),
+            "range": self.range.tolist(),
+        }

@@ -6,7 +6,7 @@ import json
 
 import torch
 
-from flucoma_torch.scaler import FluidNormalize, FluidStandardize
+from flucoma_torch.scaler import FluidNormalize, FluidStandardize, FluidRobustScaler
 from flucoma_torch.data import convert_fluid_dataset_to_tensor
 
 
@@ -90,4 +90,48 @@ def test_fluid_standardize():
     torch.testing.assert_close(
         torch.tensor(scaler_dict["std"]),
         torch.tensor(expected_scaler["std"]),
+    )
+
+
+def test_fluid_robust_scaler():
+    data_file = "tests/data/feature_regressor_in.json"
+    with open(data_file, "r") as f:
+        fluid_data = json.load(f)
+    data = convert_fluid_dataset_to_tensor(fluid_data)
+    scaler = FluidRobustScaler()
+    scaler.fit(data)
+    transformed_data = scaler.transform(data)
+
+    # Check the transformed data matches the expected robust scaled data
+    flucoma_robust = "tests/data/feature_regressor_in_robust_scaled.json"
+    with open(flucoma_robust, "r") as f:
+        expected_data = json.load(f)
+    expected_data = convert_fluid_dataset_to_tensor(expected_data)
+    torch.testing.assert_close(transformed_data, expected_data)
+
+    # Check the dictionary is correctly populated
+    scaler_dict = scaler.get_as_dict()
+    flucoma_file = "tests/data/feature_regressor_in_robust_scaler.json"
+    with open(flucoma_file, "r") as f:
+        expected_scaler = json.load(f)
+
+    assert scaler_dict["cols"] == expected_scaler["cols"]
+    torch.testing.assert_close(
+        torch.tensor(scaler_dict["data_high"]),
+        torch.tensor(expected_scaler["data_high"]),
+    )
+    torch.testing.assert_close(
+        torch.tensor(scaler_dict["data_low"]),
+        torch.tensor(expected_scaler["data_low"]),
+    )
+    assert scaler_dict["high"] == expected_scaler["high"]
+    assert scaler_dict["low"] == expected_scaler["low"]
+
+    torch.testing.assert_close(
+        torch.tensor(scaler_dict["median"]),
+        torch.tensor(expected_scaler["median"]),
+    )
+    torch.testing.assert_close(
+        torch.tensor(scaler_dict["range"]),
+        torch.tensor(expected_scaler["range"]),
     )
