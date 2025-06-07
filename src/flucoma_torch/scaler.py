@@ -61,3 +61,27 @@ class FluidNormalize(FluidBaseScaler):
             "max": self.max,
             "min": self.min,
         }
+
+
+class FluidStandardize(FluidBaseScaler):
+    """
+    Standardizer scaler for FluCoMa data.
+    """
+
+    def fit(self, data: torch.Tensor):
+        assert data.ndim == 2, "Data should be a 2D tensor."
+        self.mean = data.mean(dim=0)
+        self.std = torch.mean(torch.square(data - self.mean), dim=0).sqrt()
+        self.std[self.std < 10 * torch.finfo(self.std.dtype).smallest_normal] = 1.0
+
+    def transform(self, data: torch.Tensor) -> torch.Tensor:
+        assert data.ndim == 2, "Data should be a 2D tensor."
+        standardized_data = (data - self.mean) / self.std
+        return standardized_data
+
+    def get_as_dict(self) -> Dict:
+        return {
+            "cols": self.mean.shape[0],
+            "mean": self.mean.tolist(),
+            "std": self.std.tolist(),
+        }
