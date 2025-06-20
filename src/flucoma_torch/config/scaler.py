@@ -24,8 +24,8 @@ class FluidStandardizeConfig(ScalerConfig):
 @dataclass
 class FluidRobustScalerConfig(ScalerConfig):
     _target_: str = "flucoma_torch.scaler.FluidRobustScaler"
-    low: float = 0.25
-    high: float = 0.75
+    low: float = 25.0
+    high: float = 75.0
 
 
 cs = ConfigStore.instance()
