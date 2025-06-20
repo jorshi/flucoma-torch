@@ -3,24 +3,21 @@ CLI entry point for training the model.
 """
 
 import json
+from typing import Dict, List, Optional
 
 import hydra
 from hydra.utils import instantiate
 import lightning as L
 from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 import torch
 
 from flucoma_torch.config import RegressorConfig
 from flucoma_torch.data import load_regression_dataset, split_dataset_for_validation
 
 
-@hydra.main(version_base=None, config_name="regressor_config")
-def main(cfg: RegressorConfig) -> None:
-    logger.info("Starting training with config:")
-    logger.info("\n" + OmegaConf.to_yaml(cfg))
-
+def setup_data(cfg: DictConfig):
     # Load the dataset
     scaler = instantiate(cfg.scaler) if cfg.scaler else None
     train_dataset, source_scaler, target_scaler = load_regression_dataset(
@@ -49,34 +46,69 @@ def main(cfg: RegressorConfig) -> None:
         train_dataset, batch_size=cfg.mlp.batch_size, shuffle=True
     )
 
+    data = {
+        "train_dataloader": train_dataloader,
+        "train_dataset": train_dataset,
+        "val_dataloader": val_dataloader,
+        "callbacks": callbacks,
+        "source_scaler": source_scaler,
+        "target_scaler": target_scaler,
+        "scaler_name": scaler.name if scaler is not None else "none",
+    }
+    return data
+
+
+def fit_model(
+    cfg: DictConfig, data: Dict, extra_callbacks: Optional[List[L.Callback]] = None
+):
     # Initialize the model
-    cfg.mlp["input_size"] = train_dataset[0][0].shape[0]
-    cfg.mlp["output_size"] = train_dataset[0][1].shape[0]
+    cfg.mlp["input_size"] = data["train_dataset"][0][0].shape[0]
+    cfg.mlp["output_size"] = data["train_dataset"][0][1].shape[0]
     mlp = instantiate(cfg.mlp)
+
+    # Setup callbacks
+    callbacks = []
+    if data["callbacks"] is not None:
+        callbacks.extend(data["callbacks"])
+    if extra_callbacks is not None:
+        callbacks.extend(extra_callbacks)
 
     # Train the model
     trainer = L.Trainer(max_epochs=cfg.mlp.max_iter, callbacks=callbacks)
     logger.info("Starting training...")
-    trainer.fit(mlp, train_dataloader, val_dataloaders=val_dataloader)
+    trainer.fit(mlp, data["train_dataloader"], val_dataloaders=data["val_dataloader"])
+
+    return {"mlp": mlp, "trainer": trainer}
+
+
+@hydra.main(version_base=None, config_name="regressor_config")
+def main(cfg: RegressorConfig) -> None:
+    logger.info("Starting training with config:")
+    logger.info("\n" + OmegaConf.to_yaml(cfg))
+
+    # Load datasets and scalers
+    data = setup_data(cfg)
+
+    # Initialize and train model
+    fit = fit_model(cfg, data)
 
     # Save the model
     logger.info("Training complete. Saving model...")
     model_path = "model.json"
-    mlp.model.save(model_path)
+    fit["mlp"].model.save(model_path)
     logger.info(f"Model saved to {model_path}")
 
     # Save the scalers if they exist
-    scaler_name = scaler.name if scaler else "none"
-    if source_scaler:
-        source_scaler_path = f"source_{scaler_name}.json"
+    if data["source_scaler"]:
+        source_scaler_path = f"source_{data['scaler_name']}.json"
         with open(source_scaler_path, "w") as f:
-            json.dump(source_scaler, f, indent=4)
+            json.dump(data["source_scaler"], f, indent=4)
         logger.info(f"Source scaler saved to {source_scaler_path}")
 
-    if target_scaler:
-        target_scaler_path = f"target_{scaler_name}.json"
+    if data["target_scaler"]:
+        target_scaler_path = f"target_{data['scaler_name']}.json"
         with open(target_scaler_path, "w") as f:
-            json.dump(target_scaler, f, indent=4)
+            json.dump(data["target_scaler"], f, indent=4)
         logger.info(f"Target scaler saved to {target_scaler_path}")
 
 

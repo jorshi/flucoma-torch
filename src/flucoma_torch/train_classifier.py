@@ -52,7 +52,7 @@ def setup_data(cfg: DictConfig):
         "train_dataset": train_dataset,
         "val_dataloader": val_dataloader,
         "callbacks": callbacks,
-        "scaler_dict": source_scaler,
+        "scaler": source_scaler,
         "scaler_name": scaler.name if scaler is not None else "none",
         "labels": labels,
     }
