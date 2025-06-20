@@ -1,4 +1,5 @@
 import pytest
+import torch
 from flucoma_torch.data import (
     load_regression_dataset,
     load_classifier_dateset,
@@ -24,3 +25,32 @@ def test_convert_fluid_labelset_to_tensor_bad_data():
         AssertionError, match="Expcted labelset to have one column only"
     ):
         convert_fluid_labelset_to_tensor(bad_data)
+
+
+def test_convert_fluid_labelset_to_tensor():
+    labelset = {
+        "cols": 1,
+        "data": {
+            "0": ["label_1"],
+            "1": ["label_2"],
+            "3": ["label_1"],
+            "2": ["label_3"],
+        },
+    }
+
+    data, labels = convert_fluid_labelset_to_tensor(labelset)
+
+    # Make sure the labels returned look correct
+    assert len(labels) == 3
+    assert labels.index("label_1") == 0
+    assert labels.index("label_2") == 1
+    assert labels.index("label_3") == 2
+
+    # Now make sure the data is correct
+    onehot = torch.zeros(3)
+    onehot[0] = 1.0
+
+    assert torch.all(data[0] == onehot)
+    assert torch.all(data[3] == onehot)
+    assert torch.all(data[1] == onehot.roll(1))
+    assert torch.all(data[2] == onehot.roll(2))

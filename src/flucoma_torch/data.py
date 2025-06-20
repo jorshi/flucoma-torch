@@ -66,10 +66,26 @@ def convert_fluid_labelset_to_tensor(fluid_data: Dict):
     # one label for each datapoint.
     assert fluid_data["cols"] == 1, "Expcted labelset to have one column only"
 
-    # Get the set of unique labels from the data
+    # Sort the labeles -- this isn't exactly what FluCoMa does, but as long as the
+    # order of the labels is correct in the classifier dict then we should be good.
+    keys = sorted(list(fluid_data["data"].keys()))
+    labels = sorted(list(set(fluid_data["data"][k][0] for k in keys)))
+    assert len(labels) > 1, "Only a single label found!"
 
-    # Similar to the dataset to tensor, we will sort the keys and then create a one
-    # tensor for each item.
+    data = []
+
+    for key in keys:
+        label_idx = labels.index(fluid_data["data"][key][0])
+        onehot = torch.zeros(len(labels))
+        onehot[label_idx] = 1.0
+        data.append(onehot)
+
+    data = torch.vstack(data)
+    assert data.ndim == 2, "Data should be a 2D tensor."
+    assert data.shape[1] == len(
+        labels
+    ), f"Data shape mismatch: expected {len(labels)} columns, got {data.shape[1]}."
+    return data, labels
 
 
 def load_regression_dataset(
@@ -143,3 +159,4 @@ def load_classifier_dateset(
         target_data = json.load(f)
 
     source_data = convert_fluid_dataset_to_tensor(source_data)
+    target_data = convert_fluid_labelset_to_tensor(target_data)
