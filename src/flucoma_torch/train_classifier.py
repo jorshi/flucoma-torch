@@ -3,24 +3,21 @@ CLI entry point for training the model.
 """
 
 import json
+from typing import Dict
 
 import hydra
 from hydra.utils import instantiate
 import lightning as L
 from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 import torch
 
 from flucoma_torch.config import ClassifierConfig
 from flucoma_torch.data import load_classifier_dateset, split_dataset_for_validation
 
 
-@hydra.main(version_base=None, config_name="classifier_config")
-def main(cfg: ClassifierConfig) -> None:
-    logger.info("Starting training with config:")
-    logger.info("\n" + OmegaConf.to_yaml(cfg))
-
+def setup_data(cfg: DictConfig):
     # Load the dataset
     # TODO: split dataset into validation as well.
     scaler = instantiate(cfg.scaler) if cfg.scaler else None
@@ -50,16 +47,43 @@ def main(cfg: ClassifierConfig) -> None:
         train_dataset, batch_size=cfg.mlp.batch_size, shuffle=True
     )
 
+    data = {
+        "train_dataloader": train_dataloader,
+        "train_dataset": train_dataset,
+        "val_dataloader": val_dataloader,
+        "callbacks": callbacks,
+        "scaler_dict": source_scaler,
+        "scaler_name": scaler.name if scaler is not None else "none",
+        "labels": labels,
+    }
+    return data
+
+
+def fit_model(cfg: DictConfig, data: Dict):
     # Initialize the model
-    cfg.mlp["input_size"] = train_dataset[0][0].shape[0]
-    cfg.mlp["output_size"] = train_dataset[0][1].shape[0]
+    cfg.mlp["input_size"] = data["train_dataset"][0][0].shape[0]
+    cfg.mlp["output_size"] = data["train_dataset"][0][1].shape[0]
     mlp = instantiate(cfg.mlp)
 
     # Train the model
     # TODO: Add in early stopping
-    trainer = L.Trainer(max_epochs=cfg.mlp.max_iter, callbacks=callbacks)
+    trainer = L.Trainer(max_epochs=cfg.mlp.max_iter, callbacks=data["callbacks"])
     logger.info("Starting training...")
-    trainer.fit(mlp, train_dataloader, val_dataloaders=val_dataloader)
+    trainer.fit(mlp, data["train_dataloader"], val_dataloaders=data["val_dataloader"])
+
+    return {"mlp": mlp, "trainer": trainer}
+
+
+@hydra.main(version_base=None, config_name="classifier_config")
+def main(cfg: ClassifierConfig) -> None:
+    logger.info("Starting training with config:")
+    logger.info("\n" + OmegaConf.to_yaml(cfg))
+
+    # Load the data
+    data = setup_data(cfg)
+
+    # Create and fit the model
+    mlp = fit_model(cfg, data)
 
     # Save the model
     logger.info("Training complete. Saving model...")
@@ -67,7 +91,7 @@ def main(cfg: ClassifierConfig) -> None:
     # MLPClassifier needs labels corresponding to the onehot
     # prediction along with the model weights.
     model_dict = mlp.model.get_as_dict()
-    labels_dict = {"labels": labels, "rows": len(labels)}
+    labels_dict = {"labels": data["labels"], "rows": len(data["labels"])}
     classifier_dict = {
         "labels": labels_dict,
         "mlp": model_dict,
@@ -80,11 +104,10 @@ def main(cfg: ClassifierConfig) -> None:
     logger.info(f"Model saved to {model_path}")
 
     # Save the input scaler if it exists
-    scaler_name = scaler.name if scaler else "none"
-    if source_scaler:
-        source_scaler_path = f"source_{scaler_name}.json"
+    if data["scaler_dict"]:
+        source_scaler_path = f"source_{data["scaler_name"]}.json"
         with open(source_scaler_path, "w") as f:
-            json.dump(source_scaler, f, indent=4)
+            json.dump(data["scaler_dict"], f, indent=4)
         logger.info(f"Source scaler saved to {source_scaler_path}")
 
 
