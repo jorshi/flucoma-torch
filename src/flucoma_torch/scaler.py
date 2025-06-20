@@ -2,6 +2,7 @@
 FluCoMa Scalers
 """
 
+import json
 from typing import Dict
 
 import torch
@@ -30,11 +31,20 @@ class FluidBaseScaler:
         """
         raise NotImplementedError("This method should be overridden by subclasses.")
 
+    def save(self, filename: str):
+        """
+        Save the scaler parameters to a JSON file.
+        """
+        with open(filename, "w") as f:
+            json.dump(self.get_as_dict(), f, indent=4)
+
 
 class FluidNormalize(FluidBaseScaler):
     """
     Normalizer scaler for FluCoMa data.
     """
+
+    name = "normalize"
 
     def __init__(self, min: float = 0.0, max: float = 1.0):
         """
@@ -68,6 +78,8 @@ class FluidStandardize(FluidBaseScaler):
     Standardizer scaler for FluCoMa data.
     """
 
+    name = "standardize"
+
     def fit(self, data: torch.Tensor):
         assert data.ndim == 2, "Data should be a 2D tensor."
         self.mean = data.mean(dim=0)
@@ -91,6 +103,8 @@ class FluidRobustScaler(FluidBaseScaler):
     """
     Robust scaler for FluCoMa data.
     """
+
+    name = "robustscale"
 
     def __init__(self, low: float = 25.0, high: float = 75.0):
         """
