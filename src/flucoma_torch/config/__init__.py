@@ -62,7 +62,7 @@ class OptimizeClassifierConfig:
 
     # Optuna specific config
     study_name: str = "classifier_study"
-    mysql: bool = False
+    sqlite: bool = False
     storage_name: str = "classifier_study"
     n_trials: int = 100
     n_startup_trials: int = 10  # Number trials before start checking to prune
@@ -89,7 +89,7 @@ class OptimizeRegressorConfig:
 
     # Optuna specific config
     study_name: str = "classifier_study"
-    mysql: bool = False
+    sqlite: bool = False
     storage_name: str = "classifier_study"
     n_trials: int = 100
     n_startup_trials: int = 10  # Number trials before start checking to prune

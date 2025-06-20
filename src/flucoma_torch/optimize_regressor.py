@@ -97,9 +97,9 @@ def main(cfg: OptimizeRegressorConfig) -> None:
     os.makedirs(base_path, exist_ok=True)
     artifact_store = optuna.artifacts.FileSystemArtifactStore(base_path=base_path)
 
-    # Optional save the trial to a mysql database
+    # Optional save the trial to a sqlite database
     storage = None
-    if cfg.mysql:
+    if cfg.sqlite:
         storage = Path(cfg.storage_name)
         storage = f"sqlite:///{storage}.sqlite3"
 
