@@ -3,7 +3,7 @@ CLI entry point for training the model.
 """
 
 import json
-from typing import Dict
+from typing import Dict, List, Optional
 
 import hydra
 from hydra.utils import instantiate
@@ -59,15 +59,23 @@ def setup_data(cfg: DictConfig):
     return data
 
 
-def fit_model(cfg: DictConfig, data: Dict):
+def fit_model(
+    cfg: DictConfig, data: Dict, extra_callbacks: Optional[List[L.Callback]] = None
+):
     # Initialize the model
     cfg.mlp["input_size"] = data["train_dataset"][0][0].shape[0]
     cfg.mlp["output_size"] = data["train_dataset"][0][1].shape[0]
     mlp = instantiate(cfg.mlp)
 
+    # Setup callbacks
+    callbacks = []
+    if data["callbacks"] is not None:
+        callbacks.extend(data["callbacks"])
+    if extra_callbacks is not None:
+        callbacks.extend(extra_callbacks)
+
     # Train the model
-    # TODO: Add in early stopping
-    trainer = L.Trainer(max_epochs=cfg.mlp.max_iter, callbacks=data["callbacks"])
+    trainer = L.Trainer(max_epochs=cfg.mlp.max_iter, callbacks=callbacks)
     logger.info("Starting training...")
     trainer.fit(mlp, data["train_dataloader"], val_dataloaders=data["val_dataloader"])
 
@@ -83,14 +91,14 @@ def main(cfg: ClassifierConfig) -> None:
     data = setup_data(cfg)
 
     # Create and fit the model
-    mlp = fit_model(cfg, data)
+    fit = fit_model(cfg, data)
 
     # Save the model
     logger.info("Training complete. Saving model...")
 
     # MLPClassifier needs labels corresponding to the onehot
     # prediction along with the model weights.
-    model_dict = mlp.model.get_as_dict()
+    model_dict = fit["mlp"].model.get_as_dict()
     labels_dict = {"labels": data["labels"], "rows": len(data["labels"])}
     classifier_dict = {
         "labels": labels_dict,
