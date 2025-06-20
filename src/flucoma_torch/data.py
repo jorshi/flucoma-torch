@@ -58,6 +58,20 @@ def convert_fluid_dataset_to_tensor(fluid_data: Dict):
     return data
 
 
+def convert_fluid_labelset_to_tensor(fluid_data: Dict):
+    """
+    Create a one-hot encoded tensor from the labels.
+    """
+    # Assert that there is only one col in the data -- we assume that there is only
+    # one label for each datapoint.
+    assert fluid_data["cols"] == 1, "Expcted labelset to have one column only"
+
+    # Get the set of unique labels from the data
+
+    # Similar to the dataset to tensor, we will sort the keys and then create a one
+    # tensor for each item.
+
+
 def load_regression_dataset(
     source_filename: str,
     target_filename: str,
@@ -103,3 +117,29 @@ def load_regression_dataset(
 
     dataset = FluidDataset(source_data, target_data)
     return dataset, source_scaler_dict, target_scaler_dict
+
+
+def load_classifier_dateset(
+    source_filename: str,
+    target_filename: str,
+    scaler: Optional[FluidBaseScaler] = None,
+):
+    """
+    Load source and target datasets from JSON files and return a dataset
+    TODO: Figure out validation split
+    """
+    source_path = Path(source_filename)
+    target_path = Path(target_filename)
+
+    if not source_path.exists():
+        raise FileNotFoundError("Source file does not exist.")
+    if not target_path.exists():
+        raise FileNotFoundError("Target file does not exist.")
+
+    with open(source_path, "r") as f:
+        source_data = json.load(f)
+
+    with open(target_path, "r") as f:
+        target_data = json.load(f)
+
+    source_data = convert_fluid_dataset_to_tensor(source_data)
