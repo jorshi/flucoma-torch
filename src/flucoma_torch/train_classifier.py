@@ -64,6 +64,8 @@ def main(cfg: ClassifierConfig) -> None:
     # Save the model
     logger.info("Training complete. Saving model...")
 
+    # MLPClassifier needs labels corresponding to the onehot
+    # prediction along with the model weights.
     model_dict = mlp.model.get_as_dict()
     labels_dict = {"labels": labels, "rows": len(labels)}
     classifier_dict = {
