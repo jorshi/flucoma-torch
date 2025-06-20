@@ -127,25 +127,3 @@ def regressor_from_dict(regressor_dict: Dict):
         model.append(activation)
 
     return torch.nn.Sequential(*model)
-
-
-def get_regressor_as_dict(model: torch.nn.Module):
-    layers = []
-    for i, layer in enumerate(model.modules()):
-        if isinstance(layer, torch.nn.Linear):
-            layers.append(
-                {
-                    "biases": layer.bias.data.tolist(),
-                    "cols": layer.out_features,
-                    "rows": layer.in_features,
-                    "weights": layer.weight.data.T.tolist(),
-                }
-            )
-
-        if type(layer) in FLUID_ACTIVATIONS.values():
-            activation = list(FLUID_ACTIVATIONS.keys())[
-                list(FLUID_ACTIVATIONS.values()).index(type(layer))
-            ]
-            layers[-1]["activation"] = activation
-
-    return {"layers": layers}
