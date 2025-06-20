@@ -7,6 +7,7 @@ import json
 import hydra
 from hydra.utils import instantiate
 import lightning as L
+from lightning.pytorch.callbacks import EarlyStopping
 from loguru import logger
 from omegaconf import OmegaConf
 import torch
@@ -32,6 +33,7 @@ def main(cfg: RegressorConfig) -> None:
     # Split dataset if using validation
     val_ratio = cfg.mlp.validation
     val_dataloader = None
+    callbacks = []
     if val_ratio > 0.0:
         logger.info(f"Using a validation split ratio of {val_ratio}")
         train_dataset, val_dataset = split_dataset_for_validation(
@@ -40,6 +42,8 @@ def main(cfg: RegressorConfig) -> None:
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset, batch_size=cfg.mlp.batch_size, shuffle=False
         )
+        early_stopping = EarlyStopping("val_loss", patience=20)
+        callbacks.append(early_stopping)
 
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset, batch_size=cfg.mlp.batch_size, shuffle=True
@@ -51,7 +55,7 @@ def main(cfg: RegressorConfig) -> None:
     mlp = instantiate(cfg.mlp)
 
     # Train the model
-    trainer = L.Trainer(max_epochs=cfg.mlp.max_iter)
+    trainer = L.Trainer(max_epochs=cfg.mlp.max_iter, callbacks=callbacks)
     logger.info("Starting training...")
     trainer.fit(mlp, train_dataloader, val_dataloaders=val_dataloader)
 
