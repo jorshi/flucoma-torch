@@ -87,3 +87,36 @@ class FluidMLPRegressor(L.LightningModule):
             momentum=self.momentum,
         )
         return optimizer
+
+
+class FluidMLPClassifier(FluidMLPRegressor):
+    """
+    A PyTorch Lightning module for training and evaluation of a FluCoMa MLP Classifier.
+    This is almost identical to the regressor, but the output activation is always
+    a sigmoid.
+    """
+
+    def __init__(
+        self,
+        input_size: int,
+        hidden_layers: List[int],
+        output_size: int,
+        activation: int,
+        learn_rate: float = 1e-3,
+        max_iter: int = 1000,
+        validation: float = 0.2,
+        batch_size: int = 32,
+        momentum: float = 0.9,
+    ):
+        super().__init__(
+            input_size=input_size,
+            hidden_layers=hidden_layers,
+            output_size=output_size,
+            activation=activation,
+            output_activation=1,
+            learn_rate=learn_rate,
+            max_iter=max_iter,
+            validation=validation,
+            batch_size=batch_size,
+            momentum=momentum,
+        )
