@@ -12,7 +12,7 @@ from omegaconf import OmegaConf
 import torch
 
 from flucoma_torch.config import RegressorConfig
-from flucoma_torch.data import load_regression_dataset
+from flucoma_torch.data import load_regression_dataset, split_dataset_for_validation
 
 
 @hydra.main(version_base=None, config_name="regressor_config")
@@ -22,25 +22,38 @@ def main(cfg: RegressorConfig) -> None:
 
     # Load the dataset
     scaler = instantiate(cfg.scaler) if cfg.scaler else None
-    dataset, source_scaler, target_scaler = load_regression_dataset(
+    train_dataset, source_scaler, target_scaler = load_regression_dataset(
         source_filename=hydra.utils.to_absolute_path(cfg.source),
         target_filename=hydra.utils.to_absolute_path(cfg.target),
         scaler=scaler,
     )
-    logger.info(f"Loaded dataset with {len(dataset)} samples.")
+    logger.info(f"Loaded dataset with {len(train_dataset)} samples.")
+
+    # Split dataset if using validation
+    val_ratio = cfg.mlp.validation
+    val_dataloader = None
+    if val_ratio > 0.0:
+        logger.info(f"Using a validation split ratio of {val_ratio}")
+        train_dataset, val_dataset = split_dataset_for_validation(
+            train_dataset, val_ratio
+        )
+        val_dataloader = torch.utils.data.DataLoader(
+            val_dataset, batch_size=cfg.mlp.batch_size, shuffle=False
+        )
+
     train_dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=cfg.mlp.batch_size, shuffle=True
+        train_dataset, batch_size=cfg.mlp.batch_size, shuffle=True
     )
 
     # Initialize the model
-    cfg.mlp["input_size"] = dataset[0][0].shape[0]
-    cfg.mlp["output_size"] = dataset[0][1].shape[0]
+    cfg.mlp["input_size"] = train_dataset[0][0].shape[0]
+    cfg.mlp["output_size"] = train_dataset[0][1].shape[0]
     mlp = instantiate(cfg.mlp)
 
     # Train the model
     trainer = L.Trainer(max_epochs=cfg.mlp.max_iter)
     logger.info("Starting training...")
-    trainer.fit(mlp, train_dataloader)
+    trainer.fit(mlp, train_dataloader, val_dataloaders=val_dataloader)
 
     # Save the model
     logger.info("Training complete. Saving model...")

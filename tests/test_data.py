@@ -1,9 +1,11 @@
 import pytest
 import torch
 from flucoma_torch.data import (
+    FluidDataset,
     load_regression_dataset,
     load_classifier_dateset,
     convert_fluid_labelset_to_tensor,
+    split_dataset_for_validation,
 )
 
 
@@ -67,3 +69,38 @@ def test_convert_fluid_labelset_to_tensor():
     assert torch.all(data[3] == onehot)
     assert torch.all(data[1] == onehot.roll(1))
     assert torch.all(data[2] == onehot.roll(2))
+
+
+def test_split_dataset_for_validation():
+    dataset = FluidDataset(
+        source=torch.rand(24, 4),
+        target=torch.rand(24, 1),
+    )
+
+    assert len(dataset) == 24
+
+    # Assertion should be thrown for val sizes not 0.0 < val_size < 1.0
+    with pytest.raises(AssertionError):
+        split_dataset_for_validation(dataset, 0.0)
+
+    with pytest.raises(AssertionError):
+        split_dataset_for_validation(dataset, 1.0)
+
+    with pytest.raises(AssertionError):
+        split_dataset_for_validation(dataset, 2.0)
+
+    train, val = split_dataset_for_validation(dataset, 0.25)
+    assert len(train) == 18
+    assert len(val) == 6
+
+    for x, y in train:
+        assert torch.sum(x == dataset.source) == 4  # Point exists once in original data
+        assert torch.sum(x == val.source) == 0  # Does not exist in val
+        assert torch.sum(y == dataset.target) == 1  # Exists onse in original data
+        assert torch.sum(y == val.target) == 0  # Does exist in val
+
+    for x, y in val:
+        assert torch.sum(x == dataset.source) == 4
+        assert torch.sum(x == train.source) == 0
+        assert torch.sum(y == dataset.target) == 1
+        assert torch.sum(y == train.target) == 0

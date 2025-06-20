@@ -56,7 +56,7 @@ class FluidMLPRegressor(L.LightningModule):
         loss = self.loss_function(y_hat, y)
 
         # Log the loss
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
         return loss
 
@@ -73,7 +73,7 @@ class FluidMLPRegressor(L.LightningModule):
         loss = self.loss_function(y_hat, y)
 
         # Log the validation loss
-        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
         return loss
 

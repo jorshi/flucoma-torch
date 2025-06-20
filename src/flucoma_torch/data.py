@@ -142,7 +142,6 @@ def load_classifier_dateset(
 ):
     """
     Load source and target datasets from JSON files and return a dataset
-    TODO: Figure out validation split
     """
     source_path = Path(source_filename)
     target_path = Path(target_filename)
@@ -175,3 +174,26 @@ def load_classifier_dateset(
 
     dataset = FluidDataset(source_data, target_data)
     return dataset, source_scaler_dict, target_labels
+
+
+def split_dataset_for_validation(dataset: FluidDataset, val_ratio: float):
+    assert 0.0 < val_ratio < 1.0, "Expected val_ratio to be between 0.0 and 1.0"
+
+    num_data = len(dataset)
+    assert num_data > 1, "Expected a dataset with at least 2 items"
+
+    num_val = int(num_data * val_ratio)
+    idx = torch.randperm(num_data)
+    val_idx = idx[:num_val]
+    train_idx = idx[num_val:]
+    assert len(train_idx) + len(val_idx) == num_data
+
+    train_dataset = FluidDataset(
+        source=dataset.source[train_idx], target=dataset.target[train_idx]
+    )
+
+    val_dataset = FluidDataset(
+        source=dataset.source[val_idx], target=dataset.target[val_idx]
+    )
+
+    return train_dataset, val_dataset
