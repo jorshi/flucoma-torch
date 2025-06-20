@@ -159,4 +159,19 @@ def load_classifier_dateset(
         target_data = json.load(f)
 
     source_data = convert_fluid_dataset_to_tensor(source_data)
-    target_data = convert_fluid_labelset_to_tensor(target_data)
+    target_data, target_labels = convert_fluid_labelset_to_tensor(target_data)
+
+    if source_data.shape[0] != target_data.shape[0]:
+        raise ValueError(
+            "Source and target datasets must have the same number of samples."
+        )
+
+    # Apply scaler to input if needed
+    source_scaler_dict = None
+    if scaler is not None:
+        scaler.fit(source_data)
+        source_data = scaler.transform(source_data)
+        source_scaler_dict = scaler.get_as_dict()
+
+    dataset = FluidDataset(source_data, target_data)
+    return dataset, source_scaler_dict, target_labels

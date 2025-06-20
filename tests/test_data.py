@@ -14,9 +14,22 @@ def test_load_regression_dataset():
 
 
 def test_load_classifier_dataset():
-    load_classifier_dateset(
+    dataset, scaler, labels = load_classifier_dateset(
         "tests/data/mlpc_help_data.json", "tests/data/mlpc_help_labels.json"
     )
+    assert len(dataset) == 512
+
+    x, y = dataset[0]
+    assert x.shape == (2,)
+    assert y.shape == (4,)
+
+    assert scaler is None
+    assert labels == [
+        "bottom left red",
+        "bottom right green",
+        "top left yellow",
+        "top right blue",
+    ]
 
 
 def test_convert_fluid_labelset_to_tensor_bad_data():
