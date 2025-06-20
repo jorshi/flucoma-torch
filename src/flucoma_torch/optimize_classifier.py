@@ -98,8 +98,8 @@ def main(cfg: OptimizeClassifierConfig) -> None:
     # Optional save the trial to a mysql database
     storage = None
     if cfg.mysql:
-        storage = Path(cfg.storage)
-        storage = f"sqllite:///{storage}.sqlite3"
+        storage = Path(cfg.storage_name)
+        storage = f"sqlite:///{storage}.sqlite3"
 
     study = optuna.create_study(
         direction="minimize", pruner=pruner, storage=storage, study_name=cfg.study_name

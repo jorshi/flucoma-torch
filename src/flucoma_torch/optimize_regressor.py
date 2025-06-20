@@ -15,8 +15,8 @@ import optuna
 from optuna.artifacts import FileSystemArtifactStore
 from optuna.integration import PyTorchLightningPruningCallback
 
-from flucoma_torch.config import OptimizeClassifierConfig
-from flucoma_torch.train_classifier import setup_data, fit_model
+from flucoma_torch.config import OptimizeRegressorConfig
+from flucoma_torch.train_regressor import setup_data, fit_model
 
 
 def objective(
@@ -32,6 +32,7 @@ def objective(
 
     cfg.mlp.hidden_layers = layers
     cfg.mlp.activation = trial.suggest_int("activation", 0, 3)
+    cfg.mlp.output_activation = trial.suggest_int("output_activation", 0, 3)
     cfg.mlp.batch_size = trial.suggest_categorical("batch_size", [2, 4, 8, 16, 32, 64])
     cfg.mlp.learn_rate = trial.suggest_float("lr", 1e-6, 1.0, log=True)
     cfg.mlp.momentum = trial.suggest_float("momentum", 0.0, 1.0)
@@ -49,16 +50,8 @@ def objective(
     # Save model artefacts
     if artifact_store is not None:
         # Save the model json
-        model_dict = fit["mlp"].model.get_as_dict()
-        labels_dict = {"labels": data["labels"], "rows": len(data["labels"])}
-        classifier_dict = {
-            "labels": labels_dict,
-            "mlp": model_dict,
-        }
-
         model_path = "model.json"
-        with open(model_path, "w") as f:
-            json.dump(classifier_dict, f, indent=4)
+        fit["mlp"].model.save(model_path)
 
         # Upload as optuna artefact
         artifact_id = optuna.artifacts.upload_artifact(
@@ -71,18 +64,27 @@ def objective(
     return fit["trainer"].callback_metrics[metric]
 
 
-@hydra.main(version_base=None, config_name="optimize_classifier_config")
-def main(cfg: OptimizeClassifierConfig) -> None:
+@hydra.main(version_base=None, config_name="optimize_regressor_config")
+def main(cfg: OptimizeRegressorConfig) -> None:
     logger.info("Starting hyperparameter optimization with config:")
     logger.info("\n" + OmegaConf.to_yaml(cfg))
 
-    # Setup data to save the scaler -- we only need to save the scaler once
+    # Setup data -- we only need to save the scalers once, they won't
+    # change during trials.
     data = setup_data(cfg)
-    if data["scaler_dict"]:
-        source_scaler_path = f"source_{data["scaler_name"]}.json"
+
+    # Save the scalers if they exist
+    if data["source_scaler"]:
+        source_scaler_path = f"source_{data['scaler_name']}.json"
         with open(source_scaler_path, "w") as f:
-            json.dump(data["scaler_dict"], f, indent=4)
+            json.dump(data["source_scaler"], f, indent=4)
         logger.info(f"Source scaler saved to {source_scaler_path}")
+
+    if data["target_scaler"]:
+        target_scaler_path = f"target_{data['scaler_name']}.json"
+        with open(target_scaler_path, "w") as f:
+            json.dump(data["target_scaler"], f, indent=4)
+        logger.info(f"Target scaler saved to {target_scaler_path}")
 
     # Optuna pruner will cancel trials that aren't looking good after a specified
     # number of trials and model warmup steps.
@@ -98,8 +100,8 @@ def main(cfg: OptimizeClassifierConfig) -> None:
     # Optional save the trial to a mysql database
     storage = None
     if cfg.mysql:
-        storage = Path(cfg.storage)
-        storage = f"sqllite:///{storage}.sqlite3"
+        storage = Path(cfg.storage_name)
+        storage = f"sqlite:///{storage}.sqlite3"
 
     study = optuna.create_study(
         direction="minimize", pruner=pruner, storage=storage, study_name=cfg.study_name

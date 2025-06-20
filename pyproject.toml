@@ -19,6 +19,7 @@ dependencies = [
 ft-train-regressor = "flucoma_torch.train_regressor:main"
 ft-train-classifier = "flucoma_torch.train_classifier:main"
 ft-optimize-classifier = "flucoma_torch.optimize_classifier:main"
+ft-optimize-regressor = "flucoma_torch.optimize_regressor:main"
 
 [build-system]
 requires = ["hatchling"]
