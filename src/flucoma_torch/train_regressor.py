@@ -11,12 +11,12 @@ from loguru import logger
 from omegaconf import OmegaConf
 import torch
 
-from flucoma_torch.config import Config
+from flucoma_torch.config import RegressorConfig
 from flucoma_torch.data import load_regression_dataset
 
 
-@hydra.main(version_base=None, config_name="config")
-def main(cfg: Config) -> None:
+@hydra.main(version_base=None, config_name="regressor_config")
+def main(cfg: RegressorConfig) -> None:
     logger.info("Starting training with config:")
     logger.info("\n" + OmegaConf.to_yaml(cfg))
 

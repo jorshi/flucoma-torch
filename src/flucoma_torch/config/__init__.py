@@ -13,7 +13,7 @@ defaults = ["_self_", {"mlp": "regressor"}, {"scaler": "normalize"}]
 
 
 @dataclass
-class Config:
+class RegressorConfig:
     defaults: List[Any] = field(default_factory=lambda: defaults)
     mlp: MLPConfig = MISSING
     scaler: Optional[ScalerConfig] = None
@@ -32,4 +32,4 @@ class Config:
 
 
 cs = ConfigStore.instance()
-cs.store(name="config", node=Config)
+cs.store(name="regressor_config", node=RegressorConfig)

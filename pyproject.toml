@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-flucoma-torch-train = "flucoma_torch.train:main"
+flucoma-regressor = "flucoma_torch.train_regressor:main"
 
 [build-system]
 requires = ["hatchling"]
