@@ -215,10 +215,3 @@ with open("model.json", "w") as fp:
 # Save normalizer
 fit_normalizer.save("normalizer.json")
 ```
-
-## Dev
-
-pre-commit actions to run code formating and linting.
-```bash
-uv run pre-commit install
-```
