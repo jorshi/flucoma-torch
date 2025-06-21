@@ -151,6 +151,71 @@ This script adds additional hyperparameters in addition to those available for r
 | sqlite           | bool            | Save the study data in a sqlite database (can be viewed with optuna-dashboard) |
 | storage_name     | str             | Storage name, name of sqlite database                                          |
 
+## Train your own model
+
+You can also write your own training routines in python using the FluidMLP class, which you can then export to a json file. For regressors this json can be loaded directly.
+
+```python
+from flucoma_torch.model import FluidMLP
+
+mlp = FluidMLP(
+    input_size=2,
+    hidden_layers=[2,4,2],
+    output_size=2,
+    activation=2,
+    output_activation=2,
+)
+
+# ... train the model
+
+mlp.save("model.json")
+```
+
+For classifiers you also need labels. For example, training a classifier with data scaling:
+
+```python
+import json
+from flucoma_torch.data import load_classifier_dateset
+from flucoma_torch.model import FluidMLP
+from flucoma_torch.scaler import FluidNormalize
+
+normalizer = FluidNormalize()
+
+# This returns a torch Dataset, the scaler fit to the data, and the classification labels
+dataset, fit_normalizer, labels = load_classifier_dateset(
+    "source-data.json",
+    "target-labels.json",
+    normalizer
+)
+
+# Get the first item to see input/output shape
+x, y = dataset[0]
+
+mlp = FluidMLP(
+    input_size=x.shape[0],
+    hidden_layers=[2,4,2],
+    output_size=y.shape[0],
+    activation=2,
+    output_activation=1, # sigmoid output
+)
+
+# ... train the model
+
+# Save model with labels
+classifier_dict = {
+    "labels": {
+        "labels": labels,
+        "rows": len(labels)
+    }
+    "mlp": mlp.get_as_dict()
+}
+with open("model.json", "w") as fp:
+    json.dump(classifier_dict, fp)
+
+# Save normalizer
+fit_normalizer.save("normalizer.json")
+```
+
 ## Dev
 
 pre-commit actions to run code formating and linting.
