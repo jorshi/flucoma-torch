@@ -78,10 +78,10 @@ def main(cfg: OptimizeClassifierConfig) -> None:
 
     # Setup data to save the scaler -- we only need to save the scaler once
     data = setup_data(cfg)
-    if data["scaler_dict"]:
+    if data["scaler"]:
         source_scaler_path = f"source_{data["scaler_name"]}.json"
         with open(source_scaler_path, "w") as f:
-            json.dump(data["scaler_dict"], f, indent=4)
+            json.dump(data["scaler"], f, indent=4)
         logger.info(f"Source scaler saved to {source_scaler_path}")
 
     # Optuna pruner will cancel trials that aren't looking good after a specified
