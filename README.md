@@ -24,7 +24,7 @@ ft-train-regressor source=source-data.json target=target-data.json
 
 Train a classifier:
 ```
-ft-train-classifer source=source-data.json target=target-labels.json
+ft-train-classifier source=source-data.json target=target-labels.json
 ```
 
 Search for hyperparameters for a regressor:
@@ -52,7 +52,7 @@ Where `source-data.json` is the input data to the model and `target-data.json` i
 
 **Classifier training**:
 ```
-ft-train-classifer source=source-data.json target=target-labels.json
+ft-train-classifier source=source-data.json target=target-labels.json
 ```
 
 Where `source-data.json` is the input data to the model and `target-labels.json` is the ground truth data from a FluCoMa label set.
