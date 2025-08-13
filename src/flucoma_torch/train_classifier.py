@@ -112,10 +112,10 @@ def main(cfg: ClassifierConfig) -> None:
     logger.info(f"Model saved to {model_path}")
 
     # Save the input scaler if it exists
-    if data["scaler_dict"]:
+    if data["scaler"]:
         source_scaler_path = f"source_{data["scaler_name"]}.json"
         with open(source_scaler_path, "w") as f:
-            json.dump(data["scaler_dict"], f, indent=4)
+            json.dump(data["scaler"], f, indent=4)
         logger.info(f"Source scaler saved to {source_scaler_path}")
 
 
