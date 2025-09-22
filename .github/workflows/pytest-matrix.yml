@@ -4,8 +4,8 @@
 name: Matrix test with pytest 
 
 on:
-  pull_request:
-    branches: [ "main" ]
+  push:
+    branches: [ "matrix/**" ]
 
 permissions:
   contents: read
