@@ -11,7 +11,7 @@ dependencies = [
     "loguru",
     "optuna-integration[pytorch-lightning]",
     "optuna",
-    "torch<2.3.0",
+    "torch<2.2.0",
     "torchaudio",
 ]
 
