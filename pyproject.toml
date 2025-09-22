@@ -6,12 +6,12 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "catalogue",
-    "hydra-core>=1.0.0",
-    "lightning>=2.0.0",
+    "hydra-core",
+    "lightning",
     "loguru",
     "optuna-integration[pytorch-lightning]",
-    "optuna>=4.0.0",
-    "torch>=2.0.0",
+    "optuna",
+    "torch<2.3.0",
     "torchaudio",
 ]
 
