@@ -3,15 +3,15 @@ name = "flucoma-torch"
 version = "0.1.2"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.9"
 dependencies = [
     "catalogue",
-    "hydra-core",
-    "lightning",
+    "hydra-core>=1.0.0",
+    "lightning>=2.0.0",
     "loguru",
     "optuna-integration[pytorch-lightning]",
-    "optuna",
-    "torch",
+    "optuna>=4.0.0",
+    "torch>=2.0.0",
     "torchaudio",
 ]
 
