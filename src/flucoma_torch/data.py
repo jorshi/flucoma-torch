@@ -136,27 +136,13 @@ def load_regression_dataset(
 
 
 def load_classifier_dateset(
-    source_filename: str,
-    target_filename: str,
+    source_data: Dict,
+    target_data: Dict,
     scaler: Optional[FluidBaseScaler] = None,
 ):
     """
-    Load source and target datasets from JSON files and return a dataset
+    Load source and target datasets from dictionaries
     """
-    source_path = Path(source_filename)
-    target_path = Path(target_filename)
-
-    if not source_path.exists():
-        raise FileNotFoundError("Source file does not exist.")
-    if not target_path.exists():
-        raise FileNotFoundError("Target file does not exist.")
-
-    with open(source_path, "r") as f:
-        source_data = json.load(f)
-
-    with open(target_path, "r") as f:
-        target_data = json.load(f)
-
     source_data = convert_fluid_dataset_to_tensor(source_data)
     target_data, target_labels = convert_fluid_labelset_to_tensor(target_data)
 
@@ -174,6 +160,31 @@ def load_classifier_dateset(
 
     dataset = FluidDataset(source_data, target_data)
     return dataset, source_scaler_dict, target_labels
+
+
+def load_classifier_dataset_from_file(
+    source_filename: str,
+    target_filename: str,
+    scaler: Optional[FluidBaseScaler] = None,
+):
+    """
+    Load classifier dataset from JSON files
+    """
+    source_path = Path(source_filename)
+    target_path = Path(target_filename)
+
+    if not source_path.exists():
+        raise FileNotFoundError("Source file does not exist.")
+    if not target_path.exists():
+        raise FileNotFoundError("Target file does not exist.")
+
+    with open(source_path, "r") as f:
+        source_data = json.load(f)
+
+    with open(target_path, "r") as f:
+        target_data = json.load(f)
+
+    return load_classifier_dateset(source_data, target_data, scaler)
 
 
 def split_dataset_for_validation(dataset: FluidDataset, val_ratio: float):

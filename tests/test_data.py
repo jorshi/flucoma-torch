@@ -3,7 +3,7 @@ import torch
 from flucoma_torch.data import (
     FluidDataset,
     load_regression_dataset,
-    load_classifier_dateset,
+    load_classifier_dataset_from_file,
     convert_fluid_labelset_to_tensor,
     split_dataset_for_validation,
 )
@@ -15,8 +15,8 @@ def test_load_regression_dataset():
     )
 
 
-def test_load_classifier_dataset():
-    dataset, scaler, labels = load_classifier_dateset(
+def test_load_classifier_dataset_from_file():
+    dataset, scaler, labels = load_classifier_dataset_from_file(
         "tests/data/mlpc_help_data.json", "tests/data/mlpc_help_labels.json"
     )
     assert len(dataset) == 512
