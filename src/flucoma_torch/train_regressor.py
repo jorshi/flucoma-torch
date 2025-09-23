@@ -14,13 +14,16 @@ from omegaconf import DictConfig, OmegaConf
 import torch
 
 from flucoma_torch.config import RegressorConfig
-from flucoma_torch.data import load_regression_dataset, split_dataset_for_validation
+from flucoma_torch.data import (
+    load_regression_dataset_from_file,
+    split_dataset_for_validation,
+)
 
 
 def setup_data(cfg: DictConfig):
     # Load the dataset
     scaler = instantiate(cfg.scaler) if cfg.scaler else None
-    train_dataset, source_scaler, target_scaler = load_regression_dataset(
+    train_dataset, source_scaler, target_scaler = load_regression_dataset_from_file(
         source_filename=hydra.utils.to_absolute_path(cfg.source),
         target_filename=hydra.utils.to_absolute_path(cfg.target),
         scaler=scaler,

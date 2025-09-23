@@ -14,14 +14,17 @@ from omegaconf import DictConfig, OmegaConf
 import torch
 
 from flucoma_torch.config import ClassifierConfig
-from flucoma_torch.data import load_classifier_dateset, split_dataset_for_validation
+from flucoma_torch.data import (
+    load_classifier_dataset_from_file,
+    split_dataset_for_validation,
+)
 
 
 def setup_data(cfg: DictConfig):
     # Load the dataset
     # TODO: split dataset into validation as well.
     scaler = instantiate(cfg.scaler) if cfg.scaler else None
-    train_dataset, source_scaler, labels = load_classifier_dateset(
+    train_dataset, source_scaler, labels = load_classifier_dataset_from_file(
         source_filename=hydra.utils.to_absolute_path(cfg.source),
         target_filename=hydra.utils.to_absolute_path(cfg.target),
         scaler=scaler,
