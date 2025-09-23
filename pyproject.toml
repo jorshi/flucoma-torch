@@ -10,7 +10,7 @@ dependencies = [
     "lightning>=2.0",
     "loguru",
     "optuna-integration[pytorch-lightning]",
-    "optuna<4.0",
+    "optuna>=4.0.0",
     "torch>=2.0.0",
     "torchaudio",
 ]
