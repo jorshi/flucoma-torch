@@ -2,17 +2,18 @@ import pytest
 import torch
 from flucoma_torch.data import (
     FluidDataset,
-    load_regression_dataset,
+    load_regression_dataset_from_file,
     load_classifier_dataset_from_file,
     convert_fluid_labelset_to_tensor,
     split_dataset_for_validation,
 )
 
 
-def test_load_regression_dataset():
-    load_regression_dataset(
+def test_load_regression_dataset_from_file():
+    dataset, _, _ = load_regression_dataset_from_file(
         "tests/data/feature_regressor_in.json", "tests/data/feature_regressor_out.json"
     )
+    assert len(dataset) == 54
 
 
 def test_load_classifier_dataset_from_file():
