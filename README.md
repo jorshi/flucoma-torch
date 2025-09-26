@@ -1,6 +1,6 @@
 # flucoma-torch
 
-Moel training and hyperparameter searches for FluCoMa MLPs in PyTorch.
+Model training and hyperparameter searches for FluCoMa MLPs in PyTorch.
 
 ## Getting Started
 
