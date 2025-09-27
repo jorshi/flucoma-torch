@@ -43,9 +43,9 @@ def convert_fluid_dataset_to_tensor(fluid_data: Dict):
     data = []
 
     # Sort the keys to ensure consistent order
-    keys = sorted(list(fluid_data["data"].keys()))
+    keys = sorted([int(i) for i in fluid_data["data"].keys()])
     for key in keys:
-        data.append(fluid_data["data"][key])
+        data.append(fluid_data["data"][str(key)])
 
     if len(data) == 0:
         raise ValueError("No data found in the fluid dataset.")
@@ -68,14 +68,14 @@ def convert_fluid_labelset_to_tensor(fluid_data: Dict):
 
     # Sort the labeles -- this isn't exactly what FluCoMa does, but as long as the
     # order of the labels is correct in the classifier dict then we should be good.
-    keys = sorted(list(fluid_data["data"].keys()))
-    labels = sorted(list(set(fluid_data["data"][k][0] for k in keys)))
+    keys = sorted([int(i) for i in fluid_data["data"].keys()])
+    labels = sorted(list(set(fluid_data["data"][str(k)][0] for k in keys)))
     assert len(labels) > 1, "Only a single label found!"
 
     data = []
 
     for key in keys:
-        label_idx = labels.index(fluid_data["data"][key][0])
+        label_idx = labels.index(fluid_data["data"][str(key)][0])
         onehot = torch.zeros(len(labels))
         onehot[label_idx] = 1.0
         data.append(onehot)
